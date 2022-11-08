@@ -27,7 +27,13 @@ async function run() {
 	const recipesCollection = client
 		.db("ReviewRecipesCollection")
 		.collection("recipes");
-
+	// post data
+	app.post("/recipes", async (req, res) => {
+		const recipe = req.body;
+		const result = await recipesCollection.insertOne(recipe);
+		res.send(result);
+	});
+	// get data
 	app.get("/limitRecipes", async (req, res) => {
 		const cursor = recipesCollection.find({});
 		const limitRecipes = await cursor.limit(3).toArray();
