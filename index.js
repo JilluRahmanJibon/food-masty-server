@@ -22,3 +22,23 @@ const client = new MongoClient(uri, {
 	useUnifiedTopology: true,
 	serverApi: ServerApiVersion.v1,
 });
+
+async function run() {
+	const recipesCollection = client
+		.db("ReviewRecipesCollection")
+		.collection("recipes");
+
+	app.get("/limitRecipes", async (req, res) => {
+		const cursor = recipesCollection.find({});
+		const limitRecipes = await cursor.limit(3).toArray();
+		res.send(limitRecipes);
+	});
+	app.get("/recipes", async (req, res) => {
+		const cursor = recipesCollection.find({});
+		const recipes = await cursor.toArray();
+		res.send(recipes);
+	});
+}
+run().catch(err => {
+	console.log(err);
+});
