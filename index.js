@@ -72,7 +72,7 @@ async function run() {
 	// recipes get data
 	app.get("/limitRecipes", async (req, res) => {
 		const cursor = recipesCollection.find({});
-		const limitRecipes = await cursor.limit(3).toArray();
+		const limitRecipes = await cursor.limit(+3).toArray();
 		res.send(limitRecipes);
 	});
 
@@ -102,7 +102,12 @@ async function run() {
 		const result = await cursor.toArray();
 		res.send(result);
 	});
-
+	app.get("/reviewOne/:id", async (req, res) => {
+		const { id } = req.params;
+		const query = { _id: ObjectId(id) };
+		const result = await reviewCollection.findOne(query);
+		res.send(result);
+	});
 	app.get("/myReview", varifyEmail, async (req, res) => {
 		const decoded = req.decoded;
 		if (decoded.email !== req.query.email) {
@@ -116,6 +121,29 @@ async function run() {
 		}
 		const cursor = reviewCollection.find(query);
 		const result = await cursor.toArray();
+		res.send(result);
+	});
+
+	// update review
+	app.put("/updateReview/:id", async (req, res) => {
+		const { id } = req.params;
+		const query = { _id: ObjectId(id) };
+		const review = req.body;
+		const options = { upsert: true };
+		const updateReview = {
+			$set: {
+				name: review.name,
+				start: review.start,
+				email: review.email,
+				userImg: review.userImg,
+				message: review.message,
+			},
+		};
+		const result = await reviewCollection.updateOne(
+			query,
+			updateReview,
+			options
+		);
 		res.send(result);
 	});
 }
