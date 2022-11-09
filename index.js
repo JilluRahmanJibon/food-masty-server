@@ -72,7 +72,8 @@ async function run() {
 	// recipes get data
 	app.get("/limitRecipes", async (req, res) => {
 		const cursor = recipesCollection.find({});
-		const limitRecipes = await cursor.limit(+3).toArray();
+		const recipes = await cursor.toArray();
+		const limitRecipes = recipes.slice(-3);
 		res.send(limitRecipes);
 	});
 
@@ -96,7 +97,7 @@ async function run() {
 		res.send(review);
 	});
 
-	app.get("/singleReviewId/:id", async (req, res) => {
+	app.get("/review/:id", async (req, res) => {
 		const { id } = req.body;
 		const cursor = reviewCollection.find(id);
 		const result = await cursor.toArray();
@@ -144,6 +145,14 @@ async function run() {
 			updateReview,
 			options
 		);
+		res.send(result);
+	});
+
+	// delete review
+	app.delete("/deleteReview/:id", async (req, res) => {
+		const { id } = req.params;
+		const query = { _id: ObjectId(id) };
+		const result = await reviewCollection.deleteOne(query);
 		res.send(result);
 	});
 }
