@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const app = express();
 const port = process.env.PORT || 5000;
@@ -23,6 +24,20 @@ const client = new MongoClient(uri, {
 	serverApi: ServerApiVersion.v1,
 });
 
+function varifyEmail(req, res, next) {
+	const authHeader = req.headers.authorization;
+	if (!authHeader) {
+		return res.status(401).send({ message: "unauthorized access" });
+	}
+	const token = authHeader.split(" ")[1];
+	jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
+		if (err) {
+			return res.status(403).send({ message: "unauthorized access" });
+		}
+		req.decoded = decoded;
+		next();
+	});
+}
 async function run() {
 	const recipesCollection = client
 		.db("ReviewRecipesCollection")
@@ -31,30 +46,42 @@ async function run() {
 		.db("ReviewRecipesCollection")
 		.collection("review");
 
-	// recipes post
+	// token post
+	app.post("/jwt", (req, res) => {
+		const user = req.body;
+		const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+			expiresIn: "20h",
+		});
+		res.send({ token });
+	});
 
+	// recipes post
 	app.post("/recipes", async (req, res) => {
 		const recipe = req.body;
 		const result = await recipesCollection.insertOne(recipe);
 		res.send(result);
 	});
+
 	// review post
 	app.post("/review", async (req, res) => {
 		const review = req.body;
 		const result = await reviewCollection.insertOne(review);
 		res.send(result);
 	});
+
 	// recipes get data
 	app.get("/limitRecipes", async (req, res) => {
 		const cursor = recipesCollection.find({});
 		const limitRecipes = await cursor.limit(3).toArray();
 		res.send(limitRecipes);
 	});
+
 	app.get("/recipes", async (req, res) => {
 		const cursor = recipesCollection.find({});
 		const recipes = await cursor.toArray();
 		res.send(recipes);
 	});
+
 	app.get("/recipes/:id", async (req, res) => {
 		const { id } = req.params;
 		const query = { _id: ObjectId(id) };
@@ -68,9 +95,26 @@ async function run() {
 		const review = await cursor.toArray();
 		res.send(review);
 	});
+
 	app.get("/singleReviewId/:id", async (req, res) => {
 		const { id } = req.body;
 		const cursor = reviewCollection.find(id);
+		const result = await cursor.toArray();
+		res.send(result);
+	});
+
+	app.get("/myReview", varifyEmail, async (req, res) => {
+		const decoded = req.decoded;
+		if (decoded.email !== req.query.email) {
+			res.status(403).send({ message: "unauthorized access" });
+		}
+		let query = {};
+		if (req.query.email) {
+			query = {
+				email: req.query.email,
+			};
+		}
+		const cursor = reviewCollection.find(query);
 		const result = await cursor.toArray();
 		res.send(result);
 	});
