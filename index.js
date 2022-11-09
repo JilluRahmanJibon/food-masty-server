@@ -44,7 +44,7 @@ async function run() {
 		.collection("recipes");
 	const reviewCollection = client
 		.db("ReviewRecipesCollection")
-		.collection("review");
+		.collection("reviews");
 
 	// token post
 	app.post("/jwt", (req, res) => {
@@ -72,8 +72,7 @@ async function run() {
 	// recipes get data
 	app.get("/limitRecipes", async (req, res) => {
 		const cursor = recipesCollection.find({});
-		const recipes = await cursor.toArray();
-		const limitRecipes = recipes.slice(-3);
+		const limitRecipes = await cursor.sort({ _id: -1 }).limit(3).toArray();
 		res.send(limitRecipes);
 	});
 
@@ -121,7 +120,7 @@ async function run() {
 			};
 		}
 		const cursor = reviewCollection.find(query);
-		const result = await cursor.toArray();
+		const result = await cursor.sort({ _id: -1 }).toArray();
 		res.send(result);
 	});
 
