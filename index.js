@@ -133,10 +133,11 @@ async function run() {
 		const updateReview = {
 			$set: {
 				name: review.name,
-				start: review.start,
+				star: review.star,
 				email: review.email,
 				userImg: review.userImg,
 				message: review.message,
+				date: review.currentDate,
 			},
 		};
 		const result = await reviewCollection.updateOne(
