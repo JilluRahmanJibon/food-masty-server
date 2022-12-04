@@ -24,7 +24,7 @@ const client = new MongoClient(uri, {
 	serverApi: ServerApiVersion.v1,
 });
 
-function varifyEmail(req, res, next) {
+function verifyEmail(req, res, next) {
 	const authHeader = req.headers.authorization;
 	if (!authHeader) {
 		return res.status(401).send({ message: "unauthorized access" });
@@ -108,7 +108,7 @@ async function run() {
 		const result = await reviewCollection.findOne(query);
 		res.send(result);
 	});
-	app.get("/myReview", varifyEmail, async (req, res) => {
+	app.get("/myReview", verifyEmail, async (req, res) => {
 		const decoded = req.decoded;
 		if (decoded.email !== req.query.email) {
 			res.status(403).send({ message: "unauthorized access" });
